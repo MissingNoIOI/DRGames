@@ -4,7 +4,7 @@ using Dalamud.Interface.Internal;
 using Dalamud.Interface.Windowing;
 using ImGuiNET;
 
-namespace SamplePlugin.Windows;
+namespace DRGames.Windows;
 
 public class MainWindow : Window, IDisposable
 {

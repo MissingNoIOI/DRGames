@@ -1,0 +1,13 @@
+{
+  "Author": "Gerhard Halstein",
+  "Name": "DRGames",
+  "Punchline": "A collection of gamba games for dealers",
+  "Description": "A plugin for dealers to provide gamba games without relying on /dice. Type /drgames to start",
+  "InternalName": "drgames",
+  "ApplicableVersion": "any",
+  "Tags": [
+    "plugin",
+    "gamba",
+    "poker"
+  ]
+}
