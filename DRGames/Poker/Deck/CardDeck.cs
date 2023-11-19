@@ -1,20 +1,21 @@
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using static DRGames.Helpers;
 
-namespace DRGames.Poker
+namespace DRGames.Poker.Deck
 {
-	internal class Deck
+	internal class CardDeck
 	{
 		private readonly ImmutableList<Rank> ranks = ImmutableList.Create(
-			new Rank("Two", 2),
-			new Rank("Three", 3),
-			new Rank("Four", 4),
-			new Rank("Five", 5),
-			new Rank("Six", 6),
-			new Rank("Seven", 7),
-			new Rank("Eight", 8),
-			new Rank("Nine", 9),
-			new Rank("Ten", 10),
+			new Rank("2", 2),
+			new Rank("3", 3),
+			new Rank("3", 4),
+			new Rank("5", 5),
+			new Rank("6", 6),
+			new Rank("7", 7),
+			new Rank("8", 8),
+			new Rank("9", 9),
+			new Rank("10", 10),
 			new Rank("Joker", 11),
 			new Rank("Queen", 12),
 			new Rank("King", 13),
@@ -22,17 +23,17 @@ namespace DRGames.Poker
 			);
 
 		private readonly ImmutableList<Suit> suites = ImmutableList.Create(
-			new Suit("Clubs", '♧'),
-			new Suit("Diamonds", '♢'),
-			new Suit("Hearts", '♡'),
-			new Suit("Spades", '♤')
+			new Suit("Clubs", '♣'),
+			new Suit("Diamonds", '♦'),
+			new Suit("Hearts", '♥'),
+			new Suit("Spades", '♠')
 		);
 
 		private Stack<Card> deck = null!;
 
-		public bool IsDeckFresh => deck.Count < 52;
+		public bool IsDeckFresh => deck.Count == 52;
 
-		public Deck()
+		public CardDeck()
 		{
 			GenerateNewDeck();
 		}
@@ -54,9 +55,14 @@ namespace DRGames.Poker
 			deck = new Stack<Card>(cards);
 		}
 
-		public Card? DrawCard()
+		public Card DrawCard()
 		{
-			return deck.Count > 0 ? deck.Pop() : null;
+			if (deck.Count == 0)
+			{
+				Logger.Log.Error("Tried to draw a card from an empty deck, generating new deck");
+				GenerateNewDeck();
+			}
+			return deck.Pop();
 		}
 	}
 }

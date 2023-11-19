@@ -1,4 +1,4 @@
-﻿using Dalamud.Interface.Internal;
+using Dalamud.Interface.Internal;
 using Dalamud.Interface.Windowing;
 using ImGuiNET;
 using System;
@@ -12,7 +12,7 @@ public class MainWindow : Window, IDisposable
 	private readonly Plugin Plugin;
 
 	public MainWindow(Plugin plugin, IDalamudTextureWrap goatImage) : base(
-		"My Amazing Window", ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse)
+		"DRGames", ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse)
 	{
 		SizeConstraints = new WindowSizeConstraints
 		{
@@ -36,6 +36,13 @@ public class MainWindow : Window, IDisposable
 		if (ImGui.Button("Show Settings"))
 		{
 			Plugin.DrawConfigUI();
+		}
+
+		ImGui.Spacing();
+
+		if (ImGui.Button("Play Poker"))
+		{
+			Plugin.DrawPokerUI();
 		}
 
 		ImGui.Spacing();

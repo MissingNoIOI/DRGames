@@ -1,3 +1,4 @@
+using Dalamud.Plugin.Services;
 using System;
 using System.Collections.Generic;
 using System.Threading;
@@ -23,5 +24,29 @@ namespace DRGames
 				(list[n], list[k]) = (list[k], list[n]);
 			}
 		}
+
+
+		internal static class Logger
+		{
+			internal static IPluginLog Log { get; set; } = null!;
+		}
+
+		public static string TranslateInt(int value)
+		{
+			var temp = value.ToString();
+
+			if (temp.EndsWith("1"))
+			{
+				return $"{value}st";
+			}
+
+			if (temp.EndsWith("2"))
+			{
+				return $"{value}nd";
+			}
+
+			return temp.EndsWith("3") ? $"{value}rd" : $"{value}th";
+		}
+
 	}
 }
