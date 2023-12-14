@@ -35,17 +35,7 @@ namespace DRGames
 		{
 			var temp = value.ToString();
 
-			if (temp.EndsWith("1"))
-			{
-				return $"{value}st";
-			}
-
-			if (temp.EndsWith("2"))
-			{
-				return $"{value}nd";
-			}
-
-			return temp.EndsWith("3") ? $"{value}rd" : $"{value}th";
+			return temp.EndsWith("1") ? $"{value}st" : temp.EndsWith("2") ? $"{value}nd" : temp.EndsWith("3") ? $"{value}rd" : $"{value}th";
 		}
 
 	}
