@@ -1,4 +1,4 @@
-﻿using Dalamud.Interface.Windowing;
+using Dalamud.Interface.Windowing;
 using ImGuiNET;
 using System;
 using System.Numerics;
@@ -7,7 +7,7 @@ namespace DRGames.Windows;
 
 public class ConfigWindow : Window, IDisposable
 {
-	private readonly Configuration Configuration;
+	private readonly Configuration configuration;
 
 	public ConfigWindow(Plugin plugin) : base(
 		"A Wonderful Configuration Window",
@@ -17,7 +17,7 @@ public class ConfigWindow : Window, IDisposable
 		Size = new Vector2(232, 75);
 		SizeCondition = ImGuiCond.Always;
 
-		Configuration = plugin.Configuration;
+		configuration = plugin.Configuration;
 	}
 
 	public void Dispose() { }
@@ -25,12 +25,12 @@ public class ConfigWindow : Window, IDisposable
 	public override void Draw()
 	{
 		// can't ref a property, so use a local copy
-		var configValue = Configuration.SomePropertyToBeSavedAndWithADefault;
+		var configValue = configuration.SomePropertyToBeSavedAndWithADefault;
 		if (ImGui.Checkbox("Random Config Bool", ref configValue))
 		{
-			Configuration.SomePropertyToBeSavedAndWithADefault = configValue;
+			configuration.SomePropertyToBeSavedAndWithADefault = configValue;
 			// can save immediately on change, if you don't want to provide a "Save and Close" button
-			Configuration.Save();
+			configuration.Save();
 		}
 	}
 }

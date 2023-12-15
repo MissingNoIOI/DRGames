@@ -45,6 +45,7 @@ namespace DRGames.Poker
 
 		public void Update()
 		{
+			// Add new players in the party to the game
 			foreach (var member in PartyList)
 			{
 				if (member.Name.TextValue == ClientState.LocalPlayer!.Name.TextValue)
@@ -57,6 +58,7 @@ namespace DRGames.Poker
 					PlayerList.Add(new Player(member.Name.TextValue, member.World.GetWithLanguage(ClientState.ClientLanguage)!.Name));
 				}
 			}
+			// Remove players that have left the party
 			var toRemove = PlayerList.Where(x => !PartyList.Any(y => y.Name.TextValue == x.Name)).ToList();
 			foreach (var member in toRemove)
 			{

@@ -3,26 +3,14 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace DRGames.Poker.Solver
+namespace DRGames.Poker
 {
-	internal class Room
+	internal class Solver
 	{
 		public static Suit[] suits = Suit.suites.ToArray();
-		public string? RoomName { get; set; }
-		public List<Card>? CardsOnTable { get; set; }
+		public required List<Card> CardsOnTable { get; set; }
 
-		public ApplicationUser? Chair0 { get; set; }
-		public ApplicationUser? Chair1 { get; set; }
-		public ApplicationUser? Chair2 { get; set; }
-		public ApplicationUser? Chair3 { get; set; }
-		public ApplicationUser? Chair4 { get; set; }
-
-		public int PotOfChair0 { get; set; }
-		public int PotOfChair1 { get; set; }
-		public int PotOfChair2 { get; set; }
-		public int PotOfChair3 { get; set; }
-		public int PotOfChair4 { get; set; }
-
+		public required List<Player> Players { get; set; } = new List<Player>();
 
 		/*
          * The problem to evaluate a sorted array and give it a "score" compatibles with change base problem and sum up result.
@@ -58,16 +46,16 @@ namespace DRGames.Poker.Solver
 			return (double)sum / normalize;
 		}
 
-		public HandRank? GetPlayerHandRank(ApplicationUser user)
+		public HandRank GetPlayerHandRank(Player user)
 		{
 			// SevenCards = UserPlayerCards Union CardsOnTable
-			var SevenCards = new List<Card>(user.PlayerCards);
+			var SevenCards = user.Hand!.ToList();
 			SevenCards.AddRange(CardsOnTable);
 
 			// We must have 7 cards, otherwise we can't determine his rank
 			if (SevenCards.Count != 7)
 			{
-				return null;
+				throw new Exception("Didnt get seven cards");
 			}
 
 			// We'll sort the cards according to their value ( Card[0] - Value, Card[1] - Suit )
@@ -93,7 +81,7 @@ namespace DRGames.Poker.Solver
 			int maxCardValue = -1, dupValue = -1, seqMaxValue = -1;
 
 			int currCardValue = -1, nextCardValue = -1;
-			string currCardSuit = null, nextCardSuit = null;
+			string currCardSuit = "", nextCardSuit = "";
 
 
 			// In this section, we'll check for:
@@ -114,10 +102,10 @@ namespace DRGames.Poker.Solver
 			for (var i = 0; i < 6; i++)
 			{
 				currCardValue = SevenCards[i].Rank.Value;
-				currCardSuit = SevenCards[i].Suite.Name;
+				currCardSuit = SevenCards[i].Suite!.Name;
 
 				nextCardValue = SevenCards[i + 1].Rank.Value;
-				nextCardSuit = SevenCards[i + 1].Suite.Name;
+				nextCardSuit = SevenCards[i + 1].Suite!.Name;
 
 				// Check for duplicates.
 				if (currCardValue == nextCardValue)
@@ -179,12 +167,12 @@ namespace DRGames.Poker.Solver
              */
 
 			var rankCards = new List<Card>(); // The cards of the player
-			string rankName = null;
+			var rankName = "";
 			double rank = 0;
 
 			// Checks for Royal King: rank: 900
 			if (SevenCards[6].Rank.Value == 14 && SevenCards[5].Rank.Value == 13 && SevenCards[4].Rank.Value == 12 && SevenCards[3].Rank.Value == 11 && SevenCards[2].Rank.Value == 10
-				&& SevenCards[6].Suite.Name == SevenCards[5].Suite.Name && SevenCards[6].Suite.Name == SevenCards[4].Suite.Name && SevenCards[6].Suite.Name == SevenCards[3].Suite.Name && SevenCards[6].Suite.Name == SevenCards[2].Suite.Name)
+				&& SevenCards[6].Suite?.Name == SevenCards[5].Suite?.Name && SevenCards[6].Suite?.Name == SevenCards[4].Suite?.Name && SevenCards[6].Suite?.Name == SevenCards[3].Suite?.Name && SevenCards[6].Suite?.Name == SevenCards[2].Suite?.Name)
 			{
 				rankName = "Royal King";
 				rank = 900;
@@ -197,7 +185,7 @@ namespace DRGames.Poker.Solver
 				// Checks for Straight Flush, rank: [800, 900)
 				foreach (var suit in suits)
 				{
-					var suitCards = SevenCards.Where(x => x.Suite.Name.Equals(suit)).ToList();
+					var suitCards = SevenCards.Where(x => x.Suite!.Name.Equals(suit)).ToList();
 					if (suitCards.Count() >= 5)
 					{
 						// There's no way for duplicates, since every card in the same suit is unique.
@@ -334,7 +322,7 @@ namespace DRGames.Poker.Solver
 
 						foreach (var suit in suits)
 						{
-							var suitCards = SevenCards.Where(x => x.Suite.Equals(suit));
+							var suitCards = SevenCards.Where(x => x.Suite!.Equals(suit));
 							var suitCardsLen = suitCards.Count();
 							if (suitCardsLen >= 5)
 							{
@@ -483,238 +471,24 @@ namespace DRGames.Poker.Solver
 			};
 		}
 
-		public int getPotByIndex(int index)
-		{
-			return index switch
-			{
-				0 => PotOfChair0,
-				1 => PotOfChair1,
-				2 => PotOfChair2,
-				3 => PotOfChair3,
-				4 => PotOfChair4,
-				_ => -1,
-			};
-		}
-
-		public void setPotByIndex(int index, int amount)
-		{
-			switch (index)
-			{
-				case 0: PotOfChair0 = amount; break;
-				case 1: PotOfChair1 = amount; break;
-				case 2: PotOfChair2 = amount; break;
-				case 3: PotOfChair3 = amount; break;
-				case 4: PotOfChair4 = amount; break;
-			}
-		}
-
-		public ApplicationUser getUserByIndex(int index)
-		{
-			return index switch
-			{
-				0 => Chair0,
-				1 => Chair1,
-				2 => Chair2,
-				3 => Chair3,
-				4 => Chair4,
-				_ => null,
-			};
-		}
-
-		public int getZeroPotsAmount()
-		{
-			var zeroCounts = 0;
-			for (var i = 0; i < 5; i++)
-			{
-				if (getPotByIndex(i) == 0)
-				{
-					zeroCounts++;
-				}
-			}
-
-			return zeroCounts;
-		}
-
-		// Will return zero if and only if getZeroPotAmount() = 5
-		public int getMinPotAmountGreaterThanZero()
-		{
-			var minAmount = int.MaxValue;
-			for (var i = 0; i < 5; i++)
-			{
-				var getPot = getPotByIndex(i);
-				if (minAmount > getPot && getPot > 0)
-				{
-					minAmount = getPot;
-				}
-			}
-
-			return minAmount;
-		}
-
-		public class SidePot
-		{
-			public string? Name { get; set; } // for example Main Pot, Side Pot 1, Side Pot 2 , ...
-			public int PotAmount { get; set; }
-			public int OriginalPotAmount { get; set; }
-			public List<ApplicationUser>? ContestedBy { get; set; }
-			public List<ApplicationUser>? Winners { get; set; }
-			public string? RankName { get; set; } // For example: Full House, Straight , High Card , ...
-			public List<Card>? WinningCards { get; set; }
-		}
-
 		public class HandRank
 		{
 			public string? RankName { get; set; }
 			public double Rank { get; set; }
 			public List<Card>? Cards { get; set; }
-			public ApplicationUser? User { get; set; }
+			public Player? User { get; set; }
 			public int WinningPrice { get; set; }
 		}
 
-		public class CombineHandsAndWinners
+		public List<HandRank> GetWinners()
 		{
-			public List<List<HandRank>> totalWinners;
-			public List<SidePot> potList;
-
-			public CombineHandsAndWinners(List<List<HandRank>> totalWinners, List<SidePot> potList)
-			{
-				this.totalWinners = totalWinners;
-				this.potList = potList;
-			}
-		}
-
-		public List<SidePot> CalculateMainAndSidePots()
-		{
-			var finalPots = new List<SidePot>();
-
-			var sidePotCounter = 0;
-			while (getZeroPotsAmount() < 4)
-			{
-				var smallestDeck = getMinPotAmountGreaterThanZero();
-				var contestedBy = new List<ApplicationUser>();
-				var sidePot = new SidePot();
-
-				// In that case, 5 is the max players occupied.
-				for (var i = 0; i < 5; i++)
-				{
-					if (getPotByIndex(i) >= smallestDeck)
-					{
-						// Saves the original pot of the user
-						if (sidePot.OriginalPotAmount == 0)
-						{
-							sidePot.OriginalPotAmount = getPotByIndex(i);
-						}
-
-						setPotByIndex(i, getPotByIndex(i) - smallestDeck);
-						contestedBy.Add(getUserByIndex(i));
-					}
-				}
-
-				var potName = sidePotCounter == 0 ? "Main Pot" : "Side Pot " + sidePotCounter;
-				sidePot.Name = potName;
-				sidePot.PotAmount = smallestDeck * contestedBy.Count();
-				sidePot.ContestedBy = contestedBy;
-
-				finalPots.Add(sidePot);
-
-				sidePotCounter++;
-			}
-
-
-			// Edge case where there's still money in the room's sum pot, in that case we need to return the money to the user owned it.
-			if (getZeroPotsAmount() == 4)
-			{
-				for (var i = 0; i < 5; i++)
-				{
-					if (getPotByIndex(i) > 0)
-					{
-						var user = getUserByIndex(i);
-						user.Chips += getPotByIndex(i);
-						setPotByIndex(i, 0);
-
-						break;
-					}
-				}
-			}
-
-			return finalPots;
-		}
-
-		public List<SidePot> SpreadMoneyToWinners()
-		{
-			var handList = new List<HandRank>();
-			List<SidePot> sidePotList = null;
-
-			for (var i = 0; i < 5; i++)
-			{
-				var user = getUserByIndex(i);
-				if (user != null && user.IsPlayingThisGame && getPotByIndex(i) > 0)
-				{
-					var playerRank = GetPlayerHandRank(user);
-					if (playerRank != null)
-					{
-						handList.Add(playerRank);
-					}
-				}
-			}
-
-			// Sort Descending by rank the handlist
-			//handList.Sort((x, y) => (int)(y.Rank - x.Rank));
-			handList = handList.OrderByDescending(x => x.Rank).ToList();
-
-
-			//handList = handList.GroupBy(x => x.Rank).Select(grp => grp.ToList()).ToList();
-			//List<List<HandRank>> totalWinners = new List<List<HandRank>>();
-			var totalWinners = handList.GroupBy(x => x.Rank).Select(grp => grp.ToList()).ToList();
-
-			//var json = JsonConvert.SerializeObject(totalWinners);
-
-			sidePotList = CalculateMainAndSidePots();
-
-
-			/*
-             * For each winner group, for example 1st winners, we'll go through every main/side pot
-             * and we'll check if the intersection between the winner group and the contested by's pot has a match,
-             * if it does, we'll split the money equally between the winners, otherwise, we'll go to the next winner group,
-             * ( for example the 2nd winner groups ), it all depends on how much money every player placed in the first place.
-             */
-
-			foreach (var winnerGroup in totalWinners)
-			{
-				var winnerUsers = new List<ApplicationUser>();
-				foreach (var hand in winnerGroup)
-				{
-					winnerUsers.Add(hand.User);
-				}
-
-				foreach (var item in sidePotList)
-				{
-					var winnersMatch = winnerUsers.Intersect(item.ContestedBy).ToList();
-
-					// if it doesn't have any match, it doesn't matter and we can go to the next side pot to check for a match.
-					// NOTE: we must check if item.Winners == null which means if this Side pot already taken, if it does we don't need to cehck it again.
-					if (winnersMatch.Count() > 0 && item.Winners == null)
-					{
-						var amountOfEachPlayer = item.PotAmount / winnersMatch.Count();
-
-						item.OriginalPotAmount = item.PotAmount;
-
-						// Spread the money between the winners
-						foreach (var player in winnersMatch)
-						{
-							player.Chips += amountOfEachPlayer;
-							item.PotAmount -= amountOfEachPlayer;
-						}
-
-						item.Winners = winnersMatch;
-						item.RankName = winnerGroup[0].RankName;
-						item.WinningCards = winnerGroup[0].Cards;
-					}
-				}
-			}
-
-			//Console.WriteLine(totalWinners);
-			return sidePotList;
+			return Players
+				.Where(x => x.IsPlaying)
+				.Select(GetPlayerHandRank)
+				.OrderByDescending(x => x.Rank)
+				.GroupBy(x => x.Rank)
+				.First()
+				.ToList();
 		}
 	}
 }

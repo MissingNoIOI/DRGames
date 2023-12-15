@@ -25,6 +25,10 @@ namespace DRGames
 			}
 		}
 
+		public static List<T> ToList<T>(this Tuple<T, T> tuple)
+		{
+			return new List<T> { tuple.Item1, tuple.Item2 };
+		}
 
 		internal static class Logger
 		{

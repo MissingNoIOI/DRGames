@@ -25,7 +25,6 @@ namespace DRGames.Windows
 		{
 		}
 
-		[Obsolete]
 		public override void Draw()
 		{
 			Game.Update();
