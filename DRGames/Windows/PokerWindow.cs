@@ -29,6 +29,12 @@ namespace DRGames.Windows
 		{
 			Game.Update();
 
+			if (Game.PlayerList.Count == 0)
+			{
+				ImGui.Text("Please invite players to the party");
+				return;
+			}
+
 			// Current players
 			ImGui.Text($"Current Players ");
 			ImGui.Spacing();
@@ -66,42 +72,59 @@ namespace DRGames.Windows
 				ImGui.PopID();
 				id++;
 			}
-
-			//Community Cards
-			ImGui.Dummy(new Vector2(0, 20));
-			ImGui.Text("Current Game");
-			ImGui.Text($"{Helpers.TranslateInt(Game.Stage)} stage");
-			ImGui.Spacing();
-			if (Game.Stage != 3)
+			if (Game.PlayerList.Any(x => x.IsPlaying))
 			{
-				if (ImGui.Button("Next Stage"))
-				{
-					Game.NextStage();
-					var cards = string.Join(" | ", Game.CommunityCards);
-					if (Game.Stage < 2)
-					{
-						ImGui.SetClipboardText($"/party The game is now in the {Helpers.TranslateInt(Game.Stage)} stage and the community cards are {cards}");
-					}
-					else
-					{
-						ImGui.SetClipboardText($"/party The game is now in the {Helpers.TranslateInt(Game.Stage)} stage, the new card is {Game.CommunityCards.Last()}, so the community cards are {cards}");
-					}
-					ChatGui.Print($"Copied the community cards to the clipboard");
-				}
-			}
-
-			if (Game.CommunityCards.Count > 0)
-			{
+				//Community Cards
+				ImGui.Dummy(new Vector2(0, 20));
+				ImGui.Text("Current Game");
+				ImGui.Text($"{Helpers.TranslateInt(Game.Stage)} stage");
 				ImGui.Spacing();
-				ImGui.Text("Community Cards");
-				foreach (var card in Game.CommunityCards)
+				if (Game.Stage != 3)
 				{
-					ImGui.Text(card.FullName);
+					if (Game.PlayerList.All(x => x.Hand != null))
+					{
+						if (ImGui.Button("Next Stage"))
+						{
+							Game.NextStage();
+							var cards = string.Join(" | ", Game.CommunityCards);
+							if (Game.Stage < 2)
+							{
+								ImGui.SetClipboardText($"/party The game is now in the {Helpers.TranslateInt(Game.Stage)} stage and the community cards are {cards}");
+							}
+							else
+							{
+								ImGui.SetClipboardText($"/party The game is now in the {Helpers.TranslateInt(Game.Stage)} stage, the new card is {Game.CommunityCards.Last()}, so the community cards are {cards}");
+							}
+							ChatGui.Print($"Copied the community cards to the clipboard");
+						}
+					}
 				}
+
+				if (Game.CommunityCards.Count > 0)
+				{
+					ImGui.Spacing();
+					ImGui.Text("Community Cards");
+					foreach (var card in Game.CommunityCards)
+					{
+						ImGui.Text(card.FullName);
+					}
+				}
+
+				ImGui.Spacing();
+				ImGui.Separator();
 			}
 
-			ImGui.Spacing();
-			ImGui.Separator();
+
+			if (Game.Stage == 3)
+			{
+				ImGui.Text("Winners: ");
+				foreach (var winner in Game.Winners)
+				{
+					ImGui.Text($"{winner.User!.Name} with a {winner.RankName}");
+				}
+				ImGui.Spacing();
+				ImGui.Separator();
+			}
 
 			// End game button
 			ImGui.Dummy(new Vector2(0, 20));

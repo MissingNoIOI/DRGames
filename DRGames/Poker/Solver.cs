@@ -2,10 +2,11 @@ using DRGames.Poker.Deck;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using static DRGames.Helpers;
 
 namespace DRGames.Poker
 {
-	internal class Solver
+	public class Solver
 	{
 		public static Suit[] suits = Suit.suites.ToArray();
 		public required List<Card> CardsOnTable { get; set; }
@@ -181,7 +182,6 @@ namespace DRGames.Poker
 			}
 			else
 			{
-
 				// Checks for Straight Flush, rank: [800, 900)
 				foreach (var suit in suits)
 				{
@@ -224,7 +224,7 @@ namespace DRGames.Poker
 					}
 				}
 
-				if (rankName == null)
+				if (rankName == "")
 				{
 					// For the other cases we'll sort descend the duplicates cards according by the amount.
 					duplicates.Sort((x, y) => (int)y[0] - (int)x[0]);
@@ -243,219 +243,220 @@ namespace DRGames.Poker
 
 					// Checks for a Full House, rank: [600, 700)
 					// Edge case: there are 2 pairs of 2 and one Pair of 3, for example: 33322AA
-					else if (duplicates.Count > 2 && duplicates[0][0] == 3 && duplicates[1][0] == 2 && duplicates[2][0] == 2)
-					{
-						// In that edge case, we'll check from the two pairs what is greater.
-						rankName = "Full House";
-						var maxTmpValue = Math.Max(duplicates[1][1], duplicates[2][1]);
-
-						rank = 600 + duplicates[0][1] + (maxTmpValue / 14);
-
-						for (var i = 0; i < 3; i++)
-						{
-							rankCards.Add(new Card(Rank.GetRank(duplicates[0][1]), null));
-						}
-
-						for (var i = 0; i < 2; i++)
-						{
-							rankCards.Add(new Card(Rank.GetRank(maxTmpValue), null));
-						}
-					}
-					else if (duplicates.Count > 1 && duplicates[0][0] == 3 && duplicates[1][0] == 2)
-					{
-						rankName = "Full House";
-						// double[] threePairsValues = new double[] { duplicates[0][1], duplicates[1][1], duplicates[2][1] };
-						rank = 600 + duplicates[0][1] + (duplicates[1][1] / 14);
-
-						for (var i = 0; i < 3; i++)
-						{
-							rankCards.Add(new Card(Rank.GetRank(duplicates[0][1]), null));
-						}
-
-						for (var i = 0; i < 2; i++)
-						{
-							rankCards.Add(new Card(Rank.GetRank(duplicates[1][1]), null));
-						}
-					}
-
-					// Edge case where there are 2 pairs of Three of a kind
-					// For example if the cae is 333 222 then we'll check what is better: 333 22 or 222 33.
-					else if (duplicates.Count > 1 && duplicates[0][0] == 3 && duplicates[1][0] == 3)
-					{
-						rankName = "Full House";
-
-						double rank1, rank2;
-						rank1 = 600 + duplicates[0][1] + (duplicates[1][1] / 14);
-						rank2 = 600 + duplicates[1][1] + (duplicates[0][1] / 14);
-
-						if (rank1 > rank2)
-						{
-							rank = rank1;
-							for (var i = 0; i < 3; i++)
-							{
-								rankCards.Add(new Card(Rank.GetRank(duplicates[0][1]), null));
-							}
-
-							for (var i = 0; i < 2; i++)
-							{
-								rankCards.Add(new Card(Rank.GetRank(duplicates[1][1]), null));
-							}
-						}
-						else
-						{
-							rank = rank2;
-							for (var i = 0; i < 3; i++)
-							{
-								rankCards.Add(new Card(Rank.GetRank(duplicates[1][1]), null));
-							}
-
-							for (var i = 0; i < 2; i++)
-							{
-								rankCards.Add(new Card(Rank.GetRank(duplicates[0][1]), null));
-							}
-						}
-					}
-
 					else
 					{
-						// Checks for Flush, rank: [500, 600)
-
-						foreach (var suit in suits)
+						if (duplicates.Count > 2 && duplicates[0][0] == 3 && duplicates[1][0] == 2 && duplicates[2][0] == 2)
 						{
-							var suitCards = SevenCards.Where(x => x.Suite!.Equals(suit));
-							var suitCardsLen = suitCards.Count();
-							if (suitCardsLen >= 5)
-							{
-								// We only want the five last card
-								var suitCardsResult = suitCards.Skip(suitCardsLen - 5).ToList();
-								rankName = "Flush";
-								rank = 500 + EvaluateRankByHighestCards(suitCardsResult);
+							// In that edge case, we'll check from the two pairs what is greater.
+							rankName = "Full House";
+							var maxTmpValue = Math.Max(duplicates[1][1], duplicates[2][1]);
 
-								rankCards.AddRange(suitCardsResult);
-								break;
+							rank = 600 + duplicates[0][1] + (maxTmpValue / 14);
+
+							for (var i = 0; i < 3; i++)
+							{
+								rankCards.Add(new Card(Rank.GetRank(duplicates[0][1]), null));
+							}
+
+							for (var i = 0; i < 2; i++)
+							{
+								rankCards.Add(new Card(Rank.GetRank(maxTmpValue), null));
+							}
+						}
+						else if (duplicates.Count > 1 && duplicates[0][0] == 3 && duplicates[1][0] == 2)
+						{
+							rankName = "Full House";
+							// double[] threePairsValues = new double[] { duplicates[0][1], duplicates[1][1], duplicates[2][1] };
+							rank = 600 + duplicates[0][1] + (duplicates[1][1] / 14);
+
+							for (var i = 0; i < 3; i++)
+							{
+								rankCards.Add(new Card(Rank.GetRank(duplicates[0][1]), null));
+							}
+
+							for (var i = 0; i < 2; i++)
+							{
+								rankCards.Add(new Card(Rank.GetRank(duplicates[1][1]), null));
 							}
 						}
 
-						if (rankName == null)
+						// Edge case where there are 2 pairs of Three of a kind
+						// For example if the cae is 333 222 then we'll check what is better: 333 22 or 222 33.
+						else if (duplicates.Count > 1 && duplicates[0][0] == 3 && duplicates[1][0] == 3)
 						{
-							// Checks for Straight, rank: [400, 500)
-							if (seqCountMax >= 5)
+							rankName = "Full House";
+
+							double rank1, rank2;
+							rank1 = 600 + duplicates[0][1] + (duplicates[1][1] / 14);
+							rank2 = 600 + duplicates[1][1] + (duplicates[0][1] / 14);
+
+							if (rank1 > rank2)
 							{
-								rankName = "Straight";
-								rank = 400 + ((double)seqMaxValue / 14 * 99);
-
-								for (var i = seqMaxValue; i > seqCountMax; i--)
-								{
-									rankCards.Add(new Card(Rank.GetRank(i), null));
-								}
-							}
-
-							// Edge case: there's seqCountMax of 4, and the highest card is 5,
-							// Which means the sequence looks like this: 2, 3, 4, 5
-							// In that case, we'll check if the last card is Ace to complete a sequence of 5 cards.
-							else if (seqCountMax == 4 && seqMaxValue == 5 && maxCardValue == 14)
-							{
-								rankName = "Straight";
-
-								// In that case the highest card of the straight will be 5, and not Ace.
-								rank = 435.3571; // The result of 400 + 5/14 * 99
-
-								rankCards.Add(new Card(Rank.GetRank(14), null));
-								for (var i = 2; i < 5; i++)
-								{
-									rankCards.Add(new Card(Rank.GetRank(i), null));
-								}
-							}
-
-							// Checks for Three of a kind, rank: [300, 400)
-							else if (duplicates.Count > 0 && duplicates[0][0] == 3)
-							{
-								rankName = "Three of a kind";
-
-								rank = 300 + (duplicates[0][1] / 14 * 50) + EvaluateRankByHighestCards(SevenCards, (int)duplicates[0][1]);
-
+								rank = rank1;
 								for (var i = 0; i < 3; i++)
 								{
 									rankCards.Add(new Card(Rank.GetRank(duplicates[0][1]), null));
 								}
 
-								// Edge case: there are 2 pairs of Three of a kind, in that case we'll choose the higher one.
-								// PROBABLY WRONG ^ because it's a full house case.
-								/*if (duplicates.Count > 1 && duplicates[1][0] == 3)
-                                {
-                                    double tmpSaveMax = Math.Max(duplicates[0][1], duplicates[1][1]);
-
-                                    rank = 300 + tmpSaveMax / 14 * 50 + EvaluateRankByHighestCards(SevenCards, (int)tmpSaveMax);
-
-                                    for (int i = 0; i < 3; i++)
-                                        rankCards.Add(new string[] { tmpSaveMax.ToString(), null });
-                                }
-                                else
-                                {
-                                    rank = 300 + duplicates[0][1] / 14 * 50 + EvaluateRankByHighestCards(SevenCards, (int)duplicates[0][1]);
-
-                                    for (int i = 0; i < 3; i++)
-                                        rankCards.Add(new string[] { duplicates[0][1].ToString(), null });
-                                }*/
-							}
-
-							// Checks for Two Pairs, rank: [200, 300)
-							else if (duplicates.Count > 1 && duplicates[0][0] == 2 && duplicates[1][0] == 2)
-							{
-								rankName = "Two Pairs";
-
-								// Edge case: there are 3 pairs of Two Pairs, in that case we'll choose the higher one.
-								if (duplicates.Count > 2 && duplicates[2][0] == 2)
+								for (var i = 0; i < 2; i++)
 								{
-									//rank = 200 + Math.Max(duplicates[0][1], Math.Max(duplicates[1][1], duplicates[2][1])) / 14 * 99 + (double)maxCardValue / 14;
-
-									var threePairsValues = new double[] { duplicates[0][1], duplicates[1][1], duplicates[2][1] };
-									Array.Sort(threePairsValues, (x, y) => (int)(y - x));
-
-									// The reason for 50 is because maxCardValue/14 can be 1, and we don't want to get the score 300.
-									// and its also the reason for /392 instead of /14 is.
-									rank = 200 + (((Math.Pow(threePairsValues[0], 2) / 392) + (Math.Pow(threePairsValues[1], 2) / 392)) * 50) + EvaluateRankByHighestCards(SevenCards, (int)threePairsValues[0], (int)threePairsValues[1]);
-
-									// We need only the 2 highest pairs from the 3 pairs.
-									rankCards.Add(new Card(Rank.GetRank(threePairsValues[0]), null));
-									rankCards.Add(new Card(Rank.GetRank(threePairsValues[1]), null));
-								}
-								else
-								{
-									//rank = 200 + Math.Max(duplicates[0][1], duplicates[1][1]) / 14 * 99 + EvaluateRankByHighestCards(SevenCards, (int)duplicates[0][1], (int)duplicates[1][1]);
-									rank = 200 + (((Math.Pow(duplicates[0][1], 2) / 392) + (Math.Pow(duplicates[1][1], 2) / 392)) * 50) + EvaluateRankByHighestCards(SevenCards, (int)duplicates[0][1], (int)duplicates[1][1]);
-
-									for (var i = 0; i < 2; i++)
-									{
-										rankCards.Add(new Card(Rank.GetRank(duplicates[0][1]), null));
-									}
-
-									for (var i = 0; i < 2; i++)
-									{
-										rankCards.Add(new Card(Rank.GetRank(duplicates[1][1]), null));
-									}
+									rankCards.Add(new Card(Rank.GetRank(duplicates[1][1]), null));
 								}
 							}
-
-							// Check for One Pair, rank: [100, 200)
-							else if (duplicates.Count > 0 && duplicates[0][0] == 2)
+							else
 							{
-								rankName = "Pair";
-								rank = 100 + (duplicates[0][1] / 14 * 50) + EvaluateRankByHighestCards(SevenCards, (int)duplicates[0][1], -1, 3);
+								rank = rank2;
+								for (var i = 0; i < 3; i++)
+								{
+									rankCards.Add(new Card(Rank.GetRank(duplicates[1][1]), null));
+								}
 
 								for (var i = 0; i < 2; i++)
 								{
 									rankCards.Add(new Card(Rank.GetRank(duplicates[0][1]), null));
 								}
 							}
+						}
 
-							// Otherwise, it's High Card, rank: [0, 100)
-							else
+						else
+						{
+							// Checks for Flush, rank: [500, 600)
+
+							foreach (var suit in suits)
 							{
-								rankName = "High Card";
-								rank = EvaluateRankByHighestCards(SevenCards, -1, -1, 5);
+								var suitCards = SevenCards.Where(x => x.Suite!.Equals(suit));
+								var suitCardsLen = suitCards.Count();
+								if (suitCardsLen >= 5)
+								{
+									// We only want the five last card
+									var suitCardsResult = suitCards.Skip(suitCardsLen - 5).ToList();
+									rankName = "Flush";
+									rank = 500 + EvaluateRankByHighestCards(suitCardsResult);
 
-								rankCards.Add(new Card(Rank.GetRank(maxCardValue), null));
+									rankCards.AddRange(suitCardsResult);
+									break;
+								}
+							}
+
+							if (rankName == "")
+							{
+								// Checks for Straight, rank: [400, 500)
+								if (seqCountMax >= 5)
+								{
+									rankName = "Straight";
+									rank = 400 + ((double)seqMaxValue / 14 * 99);
+
+									for (var i = seqMaxValue; i > seqCountMax; i--)
+									{
+										rankCards.Add(new Card(Rank.GetRank(i), null));
+									}
+								}
+
+								// Edge case: there's seqCountMax of 4, and the highest card is 5,
+								// Which means the sequence looks like this: 2, 3, 4, 5
+								// In that case, we'll check if the last card is Ace to complete a sequence of 5 cards.
+								else if (seqCountMax == 4 && seqMaxValue == 5 && maxCardValue == 14)
+								{
+									rankName = "Straight";
+
+									// In that case the highest card of the straight will be 5, and not Ace.
+									rank = 435.3571; // The result of 400 + 5/14 * 99
+
+									rankCards.Add(new Card(Rank.GetRank(14), null));
+									for (var i = 2; i < 5; i++)
+									{
+										rankCards.Add(new Card(Rank.GetRank(i), null));
+									}
+								}
+
+								// Checks for Three of a kind, rank: [300, 400)
+								else if (duplicates.Count > 0 && duplicates[0][0] == 3)
+								{
+									rankName = "Three of a kind";
+									rank = 300 + (duplicates[0][1] / 14 * 50) + EvaluateRankByHighestCards(SevenCards, (int)duplicates[0][1]);
+
+									for (var i = 0; i < 3; i++)
+									{
+										rankCards.Add(new Card(Rank.GetRank(duplicates[0][1]), null));
+									}
+
+									// Edge case: there are 2 pairs of Three of a kind, in that case we'll choose the higher one.
+									// PROBABLY WRONG ^ because it's a full house case.
+									/*if (duplicates.Count > 1 && duplicates[1][0] == 3)
+									{
+										double tmpSaveMax = Math.Max(duplicates[0][1], duplicates[1][1]);
+
+										rank = 300 + tmpSaveMax / 14 * 50 + EvaluateRankByHighestCards(SevenCards, (int)tmpSaveMax);
+
+										for (int i = 0; i < 3; i++)
+											rankCards.Add(new string[] { tmpSaveMax.ToString(), null });
+									}
+									else
+									{
+										rank = 300 + duplicates[0][1] / 14 * 50 + EvaluateRankByHighestCards(SevenCards, (int)duplicates[0][1]);
+
+										for (int i = 0; i < 3; i++)
+											rankCards.Add(new string[] { duplicates[0][1].ToString(), null });
+									}*/
+								}
+
+								// Checks for Two Pairs, rank: [200, 300)
+								else if (duplicates.Count > 1 && duplicates[0][0] == 2 && duplicates[1][0] == 2)
+								{
+									rankName = "Two Pairs";
+									// Edge case: there are 3 pairs of Two Pairs, in that case we'll choose the higher one.
+									if (duplicates.Count > 2 && duplicates[2][0] == 2)
+									{
+										//rank = 200 + Math.Max(duplicates[0][1], Math.Max(duplicates[1][1], duplicates[2][1])) / 14 * 99 + (double)maxCardValue / 14;
+
+										var threePairsValues = new double[] { duplicates[0][1], duplicates[1][1], duplicates[2][1] };
+										Array.Sort(threePairsValues, (x, y) => (int)(y - x));
+
+										// The reason for 50 is because maxCardValue/14 can be 1, and we don't want to get the score 300.
+										// and its also the reason for /392 instead of /14 is.
+										rank = 200 + (((Math.Pow(threePairsValues[0], 2) / 392) + (Math.Pow(threePairsValues[1], 2) / 392)) * 50) + EvaluateRankByHighestCards(SevenCards, (int)threePairsValues[0], (int)threePairsValues[1]);
+
+										// We need only the 2 highest pairs from the 3 pairs.
+										rankCards.Add(new Card(Rank.GetRank(threePairsValues[0]), null));
+										rankCards.Add(new Card(Rank.GetRank(threePairsValues[1]), null));
+									}
+									else
+									{
+										//rank = 200 + Math.Max(duplicates[0][1], duplicates[1][1]) / 14 * 99 + EvaluateRankByHighestCards(SevenCards, (int)duplicates[0][1], (int)duplicates[1][1]);
+										rank = 200 + (((Math.Pow(duplicates[0][1], 2) / 392) + (Math.Pow(duplicates[1][1], 2) / 392)) * 50) + EvaluateRankByHighestCards(SevenCards, (int)duplicates[0][1], (int)duplicates[1][1]);
+
+										for (var i = 0; i < 2; i++)
+										{
+											rankCards.Add(new Card(Rank.GetRank(duplicates[0][1]), null));
+										}
+
+										for (var i = 0; i < 2; i++)
+										{
+											rankCards.Add(new Card(Rank.GetRank(duplicates[1][1]), null));
+										}
+									}
+								}
+
+								// Check for One Pair, rank: [100, 200)
+								else if (duplicates.Count > 0 && duplicates[0][0] == 2)
+								{
+									rankName = "Pair";
+									rank = 100 + (duplicates[0][1] / 14 * 50) + EvaluateRankByHighestCards(SevenCards, (int)duplicates[0][1], -1, 3);
+
+									for (var i = 0; i < 2; i++)
+									{
+										rankCards.Add(new Card(Rank.GetRank(duplicates[0][1]), null));
+									}
+								}
+
+								// Otherwise, it's High Card, rank: [0, 100)
+								else
+								{
+									rankName = "High Card";
+									rank = EvaluateRankByHighestCards(SevenCards, -1, -1, 5);
+
+									rankCards.Add(new Card(Rank.GetRank(maxCardValue), null));
+								}
 							}
 						}
 					}
@@ -482,6 +483,10 @@ namespace DRGames.Poker
 
 		public List<HandRank> GetWinners()
 		{
+			// var test = Players.Where(x => x.IsPlaying).ToList();
+
+			// Logger.Log.Warning(System.Text.Json.JsonSerializer.Serialize(test));
+
 			return Players
 				.Where(x => x.IsPlaying)
 				.Select(GetPlayerHandRank)

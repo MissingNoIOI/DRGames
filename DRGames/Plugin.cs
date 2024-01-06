@@ -63,7 +63,7 @@ namespace DRGames
 
 			_ = CommandManager.AddHandler(CommandName, new CommandInfo(OnCommand)
 			{
-				HelpMessage = "A useful message to display in /xlhelp"
+				HelpMessage = "Game collection to be used in the Dragon's Rest"
 			});
 
 			PluginInterface.UiBuilder.Draw += DrawUI;
@@ -84,7 +84,7 @@ namespace DRGames
 		private void OnCommand(string command, string args)
 		{
 			// in response to the slash command, just display our main ui
-			MainWindow.IsOpen = true;
+			PokerWindow.IsOpen = true;
 		}
 
 		private void DrawUI()

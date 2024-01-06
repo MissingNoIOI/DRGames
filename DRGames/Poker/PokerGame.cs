@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using static DRGames.Helpers;
+using static DRGames.Poker.Solver;
 
 namespace DRGames.Poker
 {
@@ -17,6 +18,8 @@ namespace DRGames.Poker
 		public List<Player> PlayerList { get; init; } = new List<Player>();
 		public List<Card> CommunityCards { get; set; } = new List<Card>();
 		public int Stage { get; set; } = 0;
+
+		public List<HandRank> Winners { get; set; } = new List<HandRank>();
 
 		[Obsolete]
 		public string partyNames
@@ -83,6 +86,12 @@ namespace DRGames.Poker
 			player.Hand = Tuple.Create(CardDeck.DrawCard(), CardDeck.DrawCard());
 		}
 
+		public void SolveGame()
+		{
+			var solver = new Solver { CardsOnTable = CommunityCards, Players = PlayerList };
+			Winners = solver.GetWinners();
+		}
+
 		public void NextStage()
 		{
 			switch (Stage)
@@ -99,6 +108,7 @@ namespace DRGames.Poker
 					break;
 				case 2:
 					CommunityCards.Add(CardDeck.DrawCard());
+					SolveGame();
 					Stage++;
 					break;
 				default:
