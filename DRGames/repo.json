@@ -1,0 +1,23 @@
+[
+    {
+        "Author":  "Gerhard Halstein",
+        "Name":  "DRGames",
+        "Punchline":  "A collection of gamba games for dealers",
+        "Description":  "A plugin for dealers to provide gamba games without relying on /dice. Type /drgames to start",
+        "InternalName":  "drgames",
+        "ApplicableVersion":  "any",
+        "Tags":  [
+                     "plugin",
+                     "gamba",
+                     "poker"
+                 ],
+        "IsHide":  "False",
+        "IsTestingExclusive":  "False",
+        "LastUpdated":  1704588400,
+        "DownloadCount":  0,
+        "DownloadLinkInstall":  "https://github.com/MissingNoIOI/DRGames/releases/download/1.0.0/DRGames.zip",
+        "DownloadLinkTesting":  "https://github.com/MissingNoIOI/DRGames/releases/download/1.0.0/DRGames.zip",
+        "DownloadLinkUpdate":  "https://github.com/MissingNoIOI/DRGames/releases/download/1.0.0/DRGames.zip",
+        "IconUrl":  "https://raw.githubusercontent.com/MissingNoIOI/DRGames/master/icon.png"
+    }
+]
