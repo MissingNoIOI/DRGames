@@ -9,7 +9,6 @@ foreach ($plugin in $pluginList) {
   $branch = $plugin.branch
   $configFolder = $plugin.configFolder
 
-  echo "https://api.github.com/repos/$($username)/$($repo)/releases/latest"
   # Fetch the release data from the Gibhub API
   $data = Invoke-WebRequest -Uri "https://api.github.com/repos/$($username)/$($repo)/releases/latest"
   $json = ConvertFrom-Json $data.content
