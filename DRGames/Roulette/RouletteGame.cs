@@ -72,7 +72,7 @@ namespace DRGames.Roulette
 			{
 				player.Bet = 0;
 				player.RouletteBet = null;
-				player.AutoBetCaptured = false;
+				player.ChatBetCaptured = false;
 				player.Won = null;
 				player.Payout = 0;
 			}

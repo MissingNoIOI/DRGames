@@ -6,7 +6,7 @@ using System.Text.RegularExpressions;
 
 namespace DRGames.Roulette
 {
-	public static partial class AutoBetting
+	public static partial class ChatDetection
 	{
 		public static void Apply(IHandleableChatMessage chatMessage, IEnumerable<RoulettePlayer> players)
 		{
@@ -15,7 +15,7 @@ namespace DRGames.Roulette
 			{
 				senderName = chatMessage.OriginalSender.ToString().Trim();
 			}
-			var player = players.FirstOrDefault(candidate => candidate.IsPlaying && !candidate.AutoBetCaptured && IsPlayerSender(candidate, senderName));
+			var player = players.FirstOrDefault(candidate => candidate.IsPlaying && !candidate.ChatBetCaptured && IsPlayerSender(candidate, senderName));
 			var message = chatMessage.Message.TextValue;
 			if (string.IsNullOrWhiteSpace(message))
 			{
@@ -24,7 +24,7 @@ namespace DRGames.Roulette
 			if (player is not null && TryParseBet(message, out var bet))
 			{
 				player.RouletteBet = bet;
-				player.AutoBetCaptured = true;
+				player.ChatBetCaptured = true;
 			}
 		}
 

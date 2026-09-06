@@ -8,7 +8,7 @@ namespace DRGames.Poker.Deck
 		public static readonly ImmutableList<Rank> Ranks = ImmutableList.Create(
 			new Rank("2", 2),
 			new Rank("3", 3),
-			new Rank("3", 4),
+			new Rank("4", 4),
 			new Rank("5", 5),
 			new Rank("6", 6),
 			new Rank("7", 7),

@@ -20,6 +20,8 @@ namespace DRGames.Poker
 		public IReadOnlyList<IPlayer> Players => PlayerList;
 		public List<Card> CommunityCards { get; set; } = new List<Card>();
 		public int Stage { get; set; } = 0;
+		public int BettingRound => Stage;
+		public long CurrentRoundBet { get; private set; }
 
 		public List<HandRank> Winners { get; set; } = new List<HandRank>();
 
@@ -54,7 +56,49 @@ namespace DRGames.Poker
 			if (player != null && amount > 0)
 			{
 				player.Bet += amount;
+				player.RoundBet += amount;
+				CurrentRoundBet = Math.Max(CurrentRoundBet, player.RoundBet);
 			}
+		}
+
+		public bool IsActionValid(Player player, PokerAction action)
+		{
+			if (action == PokerAction.None)
+			{
+				return false;
+			}
+
+			if (player.Hand is null || !player.IsPlaying || player.Action == PokerAction.Fold)
+			{
+				return false;
+			}
+
+			var hasOutstandingBet = player.RoundBet < CurrentRoundBet;
+			return action switch
+			{
+				PokerAction.Fold => true,
+				PokerAction.Check => !hasOutstandingBet,
+				PokerAction.Open => CurrentRoundBet == 0,
+				PokerAction.Call or PokerAction.Raise => hasOutstandingBet,
+				_ => false
+			};
+		}
+
+		public void SetAction(Player player, PokerAction action)
+		{
+			player.Action = action;
+		}
+
+		public bool TryApplyDetectedAction(Player player, PokerAction action)
+		{
+			if (action == PokerAction.None || player.ChatActionCaptured || !IsActionValid(player, action))
+			{
+				return false;
+			}
+
+			player.Action = action;
+			player.ChatActionCaptured = true;
+			return true;
 		}
 
 		public void Update()
@@ -87,6 +131,9 @@ namespace DRGames.Poker
 			{
 				player.Hand = null;
 				player.Bet = 0;
+				player.RoundBet = 0;
+				player.Action = PokerAction.None;
+				player.ChatActionCaptured = false;
 			}
 			cardDeck.GenerateNewDeck();
 			CommunityCards.Clear();
@@ -100,7 +147,14 @@ namespace DRGames.Poker
 
 		public void SolveGame()
 		{
-			var solver = new Solver { CardsOnTable = CommunityCards, Players = PlayerList };
+			var solver = new Solver
+			{
+				CardsOnTable = CommunityCards,
+				Players = PlayerList.Where(player =>
+					player.IsPlaying
+					&& player.Hand is not null
+					&& player.Action is not PokerAction.None and not PokerAction.Fold).ToList()
+			};
 			Winners = solver.GetWinners();
 		}
 

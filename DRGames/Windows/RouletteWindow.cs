@@ -19,7 +19,7 @@ namespace DRGames.Windows
 		private readonly IChatGui chatGui;
 		private readonly CommonGamePanel commonGamePanel;
 		private bool awaitingResult;
-		private bool autoBetEnabled;
+		private bool chatDetectionEnabled;
 
 		public RouletteWindow(RouletteGame game, IGameChat gameChat, IChatGui chatGui) : base("DRGames Roulette", ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse, false)
 		{
@@ -68,7 +68,7 @@ namespace DRGames.Windows
 				}
 			}
 
-			DrawAutoBetToggle();
+			DrawChatDetectionToggle();
 		}
 
 		private void DrawBettingOptions()
@@ -162,9 +162,9 @@ namespace DRGames.Windows
 
 		private void OnChatMessage(IHandleableChatMessage chatMessage)
 		{
-			if (autoBetEnabled && !awaitingResult && !game.HasResult)
+			if (chatDetectionEnabled && !awaitingResult && !game.HasResult)
 			{
-				AutoBetting.Apply(chatMessage, game.PlayerList);
+				ChatDetection.Apply(chatMessage, game.PlayerList);
 			}
 
 			var match = RouletteResultRegex().Match(chatMessage.Message.TextValue);
@@ -177,10 +177,10 @@ namespace DRGames.Windows
 			awaitingResult = false;
 		}
 
-		private void DrawAutoBetToggle()
+		private void DrawChatDetectionToggle()
 		{
 			ImGui.SetCursorPosX(MathF.Max(0, ImGui.GetWindowWidth() - 110));
-			ImGui.Checkbox("Auto-bet", ref autoBetEnabled);
+			ImGui.Checkbox("Chat detection", ref chatDetectionEnabled);
 		}
 
 		private static string GetBetTypeLabel(RouletteBetType type)

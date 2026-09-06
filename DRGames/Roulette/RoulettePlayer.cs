@@ -9,7 +9,7 @@ namespace DRGames.Roulette
 		public long Bet { get; set; }
 		public bool IsPlaying { get; set; }
 		public RouletteBet? RouletteBet { get; set; }
-		public bool AutoBetCaptured { get; set; }
+		public bool ChatBetCaptured { get; set; }
 		public bool? Won { get; set; }
 		public long Payout { get; set; }
 

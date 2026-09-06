@@ -1,5 +1,6 @@
 using Dalamud.Interface.Windowing;
 using Dalamud.Plugin.Services;
+using Dalamud.Game.Chat;
 using DRGames.Games;
 using DRGames.Poker;
 using FFXIVClientStructs.FFXIV.Common.Math;
@@ -19,6 +20,7 @@ namespace DRGames.Windows
 		private readonly IGameChat gameChat;
 		private readonly CommonGamePanel commonGamePanel;
 		private bool resultsAnnounced;
+		private bool chatDetectionEnabled;
 
 		public PokerWindow(PokerGame game, IChatGui chatGui, IGameChat gameChat) : base("DRGames Poker", ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse, false)
 		{
@@ -29,23 +31,64 @@ namespace DRGames.Windows
 			this.chatGui = chatGui;
 			this.gameChat = gameChat;
 			commonGamePanel = new CommonGamePanel(game);
+			chatGui.ChatMessage += OnChatMessage;
 		}
 
 		public void Dispose()
 		{
+			chatGui.ChatMessage -= OnChatMessage;
 			commonGamePanel.Dispose();
 		}
 
 		private void DrawPlayerDetails(IPlayer player)
 		{
 			var pokerPlayer = (Player)player;
+			var selectedAction = (int)pokerPlayer.Action;
+			ImGui.BeginDisabled(pokerPlayer.Hand is null);
+			var currentActionIsValid = game.IsActionValid(pokerPlayer, pokerPlayer.Action);
+			if (!currentActionIsValid)
+			{
+				ImGui.PushStyleColor(ImGuiCol.Text, new Vector4(0.55f, 0.55f, 0.55f, 1f));
+			}
+			ImGui.Text("Action");
+			ImGui.SameLine();
+			var comboOpen = ImGui.BeginCombo("##PokerAction", pokerPlayer.Action.ToString());
+			if (!currentActionIsValid)
+			{
+				ImGui.PopStyleColor();
+			}
+			if (comboOpen)
+			{
+				foreach (var action in Enum.GetValues<PokerAction>())
+				{
+					var isSelected = action == pokerPlayer.Action;
+					if (!game.IsActionValid(pokerPlayer, action))
+					{
+						ImGui.PushStyleColor(ImGuiCol.Text, new Vector4(0.55f, 0.55f, 0.55f, 1f));
+					}
+					if (ImGui.Selectable(action.ToString(), isSelected))
+					{
+						selectedAction = (int)action;
+					}
+					if (!game.IsActionValid(pokerPlayer, action))
+					{
+						ImGui.PopStyleColor();
+					}
+					if (isSelected)
+					{
+						ImGui.SetItemDefaultFocus();
+					}
+				}
+				ImGui.EndCombo();
+			}
+			game.SetAction(pokerPlayer, (PokerAction)selectedAction);
+			ImGui.EndDisabled();
+
 			if (pokerPlayer.Hand != null)
 			{
 				ImGui.Text("Current Hand");
-				foreach (var card in SortCards(new[] { pokerPlayer.Hand.Item1, pokerPlayer.Hand.Item2 }))
-				{
-					ImGui.Text(card.FullName);
-				}
+				ImGui.SameLine();
+				ImGui.Text(string.Join(" | ", SortCards(new[] { pokerPlayer.Hand.Item1, pokerPlayer.Hand.Item2 })));
 			}
 			else if (ImGui.Button("Deal Hand"))
 			{
@@ -55,6 +98,14 @@ namespace DRGames.Windows
 					pokerPlayer.Name,
 					pokerPlayer.World,
 					$"Your cards are {hand.First().FullName} and {hand.Last().FullName}");
+			}
+		}
+
+		private void OnChatMessage(IHandleableChatMessage chatMessage)
+		{
+			if (chatDetectionEnabled && game.Stage != 3)
+			{
+				PokerChatDetection.Apply(chatMessage, game);
 			}
 		}
 
@@ -158,6 +209,9 @@ namespace DRGames.Windows
 				game.EndGame();
 				resultsAnnounced = false;
 			}
+
+			ImGui.SameLine();
+			ImGui.Checkbox("Chat detection", ref chatDetectionEnabled);
 		}
 	}
 }
