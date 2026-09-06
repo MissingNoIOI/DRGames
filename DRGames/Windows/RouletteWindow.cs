@@ -12,15 +12,14 @@ using System.Text.RegularExpressions;
 
 namespace DRGames.Windows
 {
-	public sealed class RouletteWindow : Window, IDisposable
+	public sealed partial class RouletteWindow : Window, IDisposable
 	{
 		private readonly RouletteGame game;
 		private readonly IGameChat gameChat;
 		private readonly IChatGui chatGui;
 		private readonly CommonGamePanel commonGamePanel;
 		private bool awaitingResult;
-
-		private static readonly Regex RouletteResultRegex = new(@"Random!\s*\(1-37\)\s*(?<result>\d+)\.?", RegexOptions.Compiled);
+		private bool autoBetEnabled;
 
 		public RouletteWindow(RouletteGame game, IGameChat gameChat, IChatGui chatGui) : base("DRGames Roulette", ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse, false)
 		{
@@ -42,33 +41,34 @@ namespace DRGames.Windows
 		public override void Draw()
 		{
 			DrawBettingOptions();
-			if (!commonGamePanel.DrawPlayers(DrawPlayerDetails, DrawPlayerStatus))
+			var hasPlayers = commonGamePanel.DrawPlayers(DrawPlayerDetails, DrawPlayerStatus);
+			if (hasPlayers)
 			{
-				return;
+				ImGui.Spacing();
+				if (!game.HasResult)
+				{
+					if (awaitingResult)
+					{
+						ImGui.Text("Waiting for the roulette result...");
+					}
+					else if (ImGui.Button("Roll Roulette"))
+					{
+						awaitingResult = true;
+						gameChat.SendCommand("/dice party 37");
+					}
+				}
+				else
+				{
+					ImGui.Text($"Roulette result: {(game.Result == 37 ? 0 : game.Result)}");
+					if (ImGui.Button("End Game"))
+					{
+						game.EndGame();
+						awaitingResult = false;
+					}
+				}
 			}
 
-			ImGui.Spacing();
-			if (!game.HasResult)
-			{
-				if (awaitingResult)
-				{
-					ImGui.Text("Waiting for the roulette result...");
-				}
-				else if (ImGui.Button("Roll Roulette"))
-				{
-					awaitingResult = true;
-					gameChat.SendCommand("/dice party 37");
-				}
-			}
-			else
-			{
-				ImGui.Text($"Roulette result: {(game.Result == 37 ? 0 : game.Result)}");
-				if (ImGui.Button("End Game"))
-				{
-					game.EndGame();
-					awaitingResult = false;
-				}
-			}
+			DrawAutoBetToggle();
 		}
 
 		private void DrawBettingOptions()
@@ -162,7 +162,12 @@ namespace DRGames.Windows
 
 		private void OnChatMessage(IHandleableChatMessage chatMessage)
 		{
-			var match = RouletteResultRegex.Match(chatMessage.Message.TextValue);
+			if (autoBetEnabled && !awaitingResult && !game.HasResult)
+			{
+				AutoBetting.Apply(chatMessage, game.PlayerList);
+			}
+
+			var match = RouletteResultRegex().Match(chatMessage.Message.TextValue);
 			if (!awaitingResult || !match.Success || !int.TryParse(match.Groups["result"].Value, out var result) || result is < 1 or > 37)
 			{
 				return;
@@ -170,6 +175,12 @@ namespace DRGames.Windows
 
 			game.Evaluate(result);
 			awaitingResult = false;
+		}
+
+		private void DrawAutoBetToggle()
+		{
+			ImGui.SetCursorPosX(MathF.Max(0, ImGui.GetWindowWidth() - 110));
+			ImGui.Checkbox("Auto-bet", ref autoBetEnabled);
 		}
 
 		private static string GetBetTypeLabel(RouletteBetType type)
@@ -204,5 +215,8 @@ namespace DRGames.Windows
 				_ => value.ToString()
 			};
 		}
+
+		[GeneratedRegex(@"Random!\s*\(1-37\)\s*(?<result>\d+)\.?")]
+		private static partial Regex RouletteResultRegex();
 	}
 }
