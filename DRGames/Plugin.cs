@@ -24,6 +24,7 @@ namespace DRGames
 		[PluginService] internal static IPluginLog Log { get; private set; } = null!;
 		[PluginService] internal static IPartyList PartyList { get; private set; } = null!;
 		[PluginService] internal static IChatGui ChatGui { get; private set; } = null!;
+		[PluginService] internal static IFramework Framework { get; private set; } = null!;
 		[PluginService] internal static IObjectTable ObjectTable { get; private set; } = null!;
 
 
@@ -46,7 +47,7 @@ namespace DRGames
 			Configuration = PluginInterface.GetPluginConfig() as Configuration ?? new Configuration();
 
 			var pokerGame = new PokerGame(PartyList, ObjectTable);
-			gameChat = new GameChat();
+			gameChat = new GameChat(Framework);
 
 			configWindow = new ConfigWindow(this);
 			pokerWindow = new PokerWindow(pokerGame, ChatGui, gameChat);

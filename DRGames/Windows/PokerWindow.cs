@@ -5,8 +5,10 @@ using DRGames.Poker;
 using FFXIVClientStructs.FFXIV.Common.Math;
 using Dalamud.Bindings.ImGui;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using Dalamud.Game.Text;
+using DRGames.Poker.Deck;
 
 namespace DRGames.Windows
 {
@@ -16,6 +18,7 @@ namespace DRGames.Windows
 		private readonly IChatGui chatGui;
 		private readonly IGameChat gameChat;
 		private readonly CommonGamePanel commonGamePanel;
+		private bool resultsAnnounced;
 
 		public PokerWindow(PokerGame game, IChatGui chatGui, IGameChat gameChat) : base("DRGames Poker", ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse, false)
 		{
@@ -39,17 +42,44 @@ namespace DRGames.Windows
 			if (pokerPlayer.Hand != null)
 			{
 				ImGui.Text("Current Hand");
-				ImGui.Text(pokerPlayer.Hand.Item1.FullName);
-				ImGui.Text(pokerPlayer.Hand.Item2.FullName);
+				foreach (var card in SortCards(new[] { pokerPlayer.Hand.Item1, pokerPlayer.Hand.Item2 }))
+				{
+					ImGui.Text(card.FullName);
+				}
 			}
 			else if (ImGui.Button("Deal Hand"))
 			{
 				game.DealHand(pokerPlayer);
+				var hand = SortCards(new[] { pokerPlayer.Hand.Item1, pokerPlayer.Hand.Item2 });
 				gameChat.SendTell(
 					pokerPlayer.Name,
 					pokerPlayer.World,
-					$"Your cards are {pokerPlayer.Hand.Item1.FullName} and {pokerPlayer.Hand.Item2.FullName}");
+					$"Your cards are {hand.First().FullName} and {hand.Last().FullName}");
 			}
+		}
+
+		private static IEnumerable<Card> SortCards(IEnumerable<Card> cards)
+		{
+			return cards
+				.OrderBy(card => card.Rank.Value)
+				.ThenBy(card => card.Suite?.Name);
+		}
+
+		private static string FormatHand(Tuple<Card, Card> hand)
+		{
+			return string.Join(" and ", SortCards(new[] { hand.Item1, hand.Item2 }));
+		}
+
+		private void AnnounceResults()
+		{
+			var hands = string.Join(", ", game.PlayerList
+				.Where(player => player.IsPlaying && player.Hand is not null)
+				.Select(player => $"{player.Name}: {FormatHand(player.Hand!)}"));
+			var winners = string.Join(", ", game.Winners
+				.Select(winner => $"{winner.User!.Name} with a {winner.RankName}"));
+
+			gameChat.SendPartyMessage($"Player hands: {hands}");
+			gameChat.SendPartyMessage($"Winners: {winners}");
 		}
 
 		public override void Draw()
@@ -58,6 +88,7 @@ namespace DRGames.Windows
 			{
 				return;
 			}
+			ImGui.Text($"Total Betting Pool: {game.PlayerList.Sum(x => x.Bet):N0} gil");
 			if (game.PlayerList.Any(x => x.IsPlaying))
 			{
 				//Community Cards
@@ -73,7 +104,8 @@ namespace DRGames.Windows
 						if (ImGui.Button("Next Stage"))
 						{
 							game.NextStage();
-							var cards = string.Join(" | ", game.CommunityCards);
+							var newCard = game.CommunityCards.Last();
+							var cards = string.Join(" | ", SortCards(game.CommunityCards));
 							if (game.Stage < 2)
 							{
 								gameChat.SendPartyMessage(
@@ -82,7 +114,7 @@ namespace DRGames.Windows
 							else
 							{
 								gameChat.SendPartyMessage(
-									$"The game is now in the {Helpers.TranslateInt(game.Stage)} stage, the new card is {game.CommunityCards.Last()}, so the community cards are {cards}");
+									$"The game is now in the {Helpers.TranslateInt(game.Stage)} stage, the new card is {newCard}, so the community cards are {cards}");
 							}
 							chatGui.Print($"Copied the community cards to the clipboard");
 						}
@@ -93,10 +125,7 @@ namespace DRGames.Windows
 				{
 					ImGui.Spacing();
 					ImGui.Text("Community Cards");
-					foreach (var card in game.CommunityCards)
-					{
-						ImGui.Text(card.FullName);
-					}
+					ImGui.Text(string.Join(" | ", SortCards(game.CommunityCards)));
 				}
 
 				ImGui.Spacing();
@@ -106,6 +135,12 @@ namespace DRGames.Windows
 
 			if (game.Stage == 3)
 			{
+				if (!resultsAnnounced)
+				{
+					AnnounceResults();
+					resultsAnnounced = true;
+				}
+
 				ImGui.Text("Winners: ");
 				foreach (var winner in game.Winners)
 				{
@@ -121,6 +156,7 @@ namespace DRGames.Windows
 			if (ImGui.Button("End Current Game"))
 			{
 				game.EndGame();
+				resultsAnnounced = false;
 			}
 		}
 	}
