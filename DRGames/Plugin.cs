@@ -3,8 +3,11 @@ using Dalamud.Interface.Windowing;
 using Dalamud.IoC;
 using Dalamud.Plugin;
 using Dalamud.Plugin.Services;
+using DRGames.Games;
 using DRGames.Poker;
+using DRGames.Services;
 using DRGames.Windows;
+using ECommons;
 using System.IO;
 using static DRGames.Helpers;
 
@@ -35,15 +38,18 @@ namespace DRGames
 
 		private readonly PokerWindow pokerWindow;
 		private readonly MainWindow mainWindow;
+		private readonly IGameChat gameChat;
 
 		public Plugin()
 		{
+			ECommonsMain.Init(PluginInterface, this);
 			Configuration = PluginInterface.GetPluginConfig() as Configuration ?? new Configuration();
 
 			var pokerGame = new PokerGame(PartyList, ObjectTable);
+			gameChat = new GameChat();
 
 			configWindow = new ConfigWindow(this);
-			pokerWindow = new PokerWindow(pokerGame, ChatGui);
+			pokerWindow = new PokerWindow(pokerGame, ChatGui, gameChat);
 			mainWindow = new MainWindow(this);
 
 			Logger.Log = Log;
@@ -72,6 +78,7 @@ namespace DRGames
 			pokerWindow.Dispose();
 
 			_ = CommandManager.RemoveHandler(CommandName);
+			ECommonsMain.Dispose();
 		}
 
 		private void OnCommand(string command, string args)

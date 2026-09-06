@@ -14,15 +14,17 @@ namespace DRGames.Windows
 	{
 		private readonly PokerGame game;
 		private readonly IChatGui chatGui;
+		private readonly IGameChat gameChat;
 		private readonly CommonGamePanel commonGamePanel;
 
-		public PokerWindow(PokerGame game, IChatGui chatGui) : base("DRGames Poker", ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse, false)
+		public PokerWindow(PokerGame game, IChatGui chatGui, IGameChat gameChat) : base("DRGames Poker", ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse, false)
 		{
 			Size = new Vector2(0, 0);
 			SizeCondition = ImGuiCond.Always;
 
 			this.game = game;
 			this.chatGui = chatGui;
+			this.gameChat = gameChat;
 			commonGamePanel = new CommonGamePanel(game, chatGui);
 		}
 
@@ -43,12 +45,10 @@ namespace DRGames.Windows
 			else if (ImGui.Button("Deal Hand"))
 			{
 				game.DealHand(pokerPlayer);
-				chatGui.Print(new XivChatEntry
-				{
-					Type = XivChatType.TellOutgoing,
-					Name = pokerPlayer.Name,
-					Message = $"Your cards are {pokerPlayer.Hand.Item1.FullName} and {pokerPlayer.Hand.Item2.FullName}"
-				});
+				gameChat.SendTell(
+					pokerPlayer.Name,
+					pokerPlayer.World,
+					$"Your cards are {pokerPlayer.Hand.Item1.FullName} and {pokerPlayer.Hand.Item2.FullName}");
 			}
 		}
 
@@ -76,19 +76,13 @@ namespace DRGames.Windows
 							var cards = string.Join(" | ", game.CommunityCards);
 							if (game.Stage < 2)
 							{
-								chatGui.Print(new XivChatEntry
-								{
-									Type = XivChatType.Party,
-									Message = $"The game is now in the {Helpers.TranslateInt(game.Stage)} stage and the community cards are {cards}"
-								});
+								gameChat.SendPartyMessage(
+									$"The game is now in the {Helpers.TranslateInt(game.Stage)} stage and the community cards are {cards}");
 							}
 							else
 							{
-								chatGui.Print(new XivChatEntry
-								{
-									Type = XivChatType.Party,
-									Message = $"The game is now in the {Helpers.TranslateInt(game.Stage)} stage, the new card is {game.CommunityCards.Last()}, so the community cards are {cards}"
-								});
+								gameChat.SendPartyMessage(
+									$"The game is now in the {Helpers.TranslateInt(game.Stage)} stage, the new card is {game.CommunityCards.Last()}, so the community cards are {cards}");
 							}
 							chatGui.Print($"Copied the community cards to the clipboard");
 						}

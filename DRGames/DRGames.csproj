@@ -29,4 +29,8 @@
   <ItemGroup>
     <Folder Include="Betting\" />
   </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="ECommons" Version="3.2.1.18" />
+  </ItemGroup>
 </Project>
