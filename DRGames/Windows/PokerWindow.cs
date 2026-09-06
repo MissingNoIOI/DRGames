@@ -25,7 +25,7 @@ namespace DRGames.Windows
 			this.game = game;
 			this.chatGui = chatGui;
 			this.gameChat = gameChat;
-			commonGamePanel = new CommonGamePanel(game, chatGui);
+			commonGamePanel = new CommonGamePanel(game);
 		}
 
 		public void Dispose()
@@ -122,7 +122,6 @@ namespace DRGames.Windows
 			{
 				game.EndGame();
 			}
-
 		}
 	}
 }
