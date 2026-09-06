@@ -5,10 +5,10 @@ using Dalamud.Plugin;
 using Dalamud.Plugin.Services;
 using DRGames.Games;
 using DRGames.Poker;
+using DRGames.Roulette;
 using DRGames.Services;
 using DRGames.Windows;
 using ECommons;
-using System.IO;
 using static DRGames.Helpers;
 
 namespace DRGames
@@ -27,7 +27,6 @@ namespace DRGames
 		[PluginService] internal static IFramework Framework { get; private set; } = null!;
 		[PluginService] internal static IObjectTable ObjectTable { get; private set; } = null!;
 
-
 		public string Name => "DRGames";
 		private const string CommandName = "/drgames";
 
@@ -36,8 +35,8 @@ namespace DRGames
 		public WindowSystem WindowSystem = new("DRGames");
 
 		private readonly ConfigWindow configWindow;
-
 		private readonly PokerWindow pokerWindow;
+		private readonly RouletteWindow rouletteWindow;
 		private readonly MainWindow mainWindow;
 		private readonly IGameChat gameChat;
 
@@ -47,16 +46,19 @@ namespace DRGames
 			Configuration = PluginInterface.GetPluginConfig() as Configuration ?? new Configuration();
 
 			var pokerGame = new PokerGame(PartyList, ObjectTable);
+			var rouletteGame = new RouletteGame(PartyList, ObjectTable);
 			gameChat = new GameChat(Framework);
 
 			configWindow = new ConfigWindow(this);
 			pokerWindow = new PokerWindow(pokerGame, ChatGui, gameChat);
+			rouletteWindow = new RouletteWindow(rouletteGame, gameChat, ChatGui);
 			mainWindow = new MainWindow(this);
 
 			Logger.Log = Log;
 
 			WindowSystem.AddWindow(configWindow);
 			WindowSystem.AddWindow(pokerWindow);
+			WindowSystem.AddWindow(rouletteWindow);
 			WindowSystem.AddWindow(mainWindow);
 
 			_ = CommandManager.AddHandler(CommandName, new CommandInfo(OnCommand)
@@ -66,17 +68,17 @@ namespace DRGames
 
 			PluginInterface.UiBuilder.Draw += DrawUI;
 			PluginInterface.UiBuilder.OpenConfigUi += DrawConfigUI;
-
 			PluginInterface.UiBuilder.OpenMainUi += () => mainWindow.IsOpen = true;
 		}
 
 		public void Dispose()
 		{
 			WindowSystem.RemoveAllWindows();
-
 			configWindow.Dispose();
 			mainWindow.Dispose();
 			pokerWindow.Dispose();
+			rouletteWindow.Dispose();
+			gameChat.Dispose();
 
 			_ = CommandManager.RemoveHandler(CommandName);
 			ECommonsMain.Dispose();
@@ -84,7 +86,6 @@ namespace DRGames
 
 		private void OnCommand(string command, string args)
 		{
-			// in response to the slash command, just display our main ui
 			mainWindow.IsOpen = true;
 		}
 
@@ -101,6 +102,11 @@ namespace DRGames
 		public void DrawPokerUI()
 		{
 			pokerWindow.IsOpen = true;
+		}
+
+		public void DrawRouletteUI()
+		{
+			rouletteWindow.IsOpen = true;
 		}
 	}
 }

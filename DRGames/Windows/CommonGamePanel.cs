@@ -20,7 +20,7 @@ namespace DRGames.Windows
 			TradeDetectionManager.OnTradeEnd -= OnTradeEnd;
 		}
 
-		public bool DrawPlayers(Action<IPlayer> drawPlayerDetails)
+		public bool DrawPlayers(Action<IPlayer> drawPlayerDetails, Action<IPlayer>? drawPlayerStatus = null)
 		{
 			game.Update();
 
@@ -39,13 +39,16 @@ namespace DRGames.Windows
 			{
 				ImGui.PushID(id++);
 				ImGui.Text("Player: " + player.Name);
-				ImGui.Text($"Bet: {player.Bet:N0} gil");
+				ImGui.SameLine();
 
 				var isPlaying = player.IsPlaying;
 				if (ImGui.Checkbox("Is Playing ", ref isPlaying))
 				{
 					player.IsPlaying = isPlaying;
 				}
+
+				ImGui.Text($"Bet: {player.Bet:N0} gil");
+				drawPlayerStatus?.Invoke(player);
 
 				if (player.IsPlaying)
 				{

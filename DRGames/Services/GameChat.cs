@@ -23,14 +23,19 @@ namespace DRGames.Services
 			worker = ProcessMessagesAsync();
 		}
 
+		public void SendCommand(string command)
+		{
+			messageQueue.Writer.TryWrite(command);
+		}
+
 		public void SendPartyMessage(string message)
 		{
-			messageQueue.Writer.TryWrite($"/p {message}");
+			SendCommand($"/p {message}");
 		}
 
 		public void SendTell(string playerName, string world, string message)
 		{
-			messageQueue.Writer.TryWrite($"/tell {playerName}@{world} {message}");
+			SendCommand($"/tell {playerName}@{world} {message}");
 		}
 
 		public void Dispose()

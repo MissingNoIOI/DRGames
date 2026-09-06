@@ -43,5 +43,10 @@ public class MainWindow : Window, IDisposable
 		}
 
 		ImGui.Spacing();
+
+		if (ImGui.Button("Play Roulette"))
+		{
+			plugin.DrawRouletteUI();
+		}
 	}
 }
