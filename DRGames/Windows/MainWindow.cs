@@ -1,6 +1,7 @@
 using Dalamud.Interface.Internal;
 using Dalamud.Interface.Windowing;
-using ImGuiNET;
+using Dalamud.Interface.Textures.TextureWraps;
+using Dalamud.Bindings.ImGui;
 using System;
 using System.Numerics;
 
@@ -8,10 +9,9 @@ namespace DRGames.Windows;
 
 public class MainWindow : Window, IDisposable
 {
-	private readonly IDalamudTextureWrap GoatImage;
 	private readonly Plugin Plugin;
 
-	public MainWindow(Plugin plugin, IDalamudTextureWrap goatImage) : base(
+	public MainWindow(Plugin plugin) : base(
 		"DRGames", ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse)
 	{
 		SizeConstraints = new WindowSizeConstraints
@@ -19,14 +19,11 @@ public class MainWindow : Window, IDisposable
 			MinimumSize = new Vector2(375, 330),
 			MaximumSize = new Vector2(float.MaxValue, float.MaxValue)
 		};
-
-		GoatImage = goatImage;
 		Plugin = plugin;
 	}
 
 	public void Dispose()
 	{
-		GoatImage.Dispose();
 	}
 
 	public override void Draw()
@@ -46,10 +43,5 @@ public class MainWindow : Window, IDisposable
 		}
 
 		ImGui.Spacing();
-
-		ImGui.Text("Have a goat:");
-		ImGui.Indent(55);
-		ImGui.Image(GoatImage.ImGuiHandle, new Vector2(GoatImage.Width, GoatImage.Height));
-		ImGui.Unindent(55);
 	}
 }

@@ -11,7 +11,7 @@ namespace DRGames.Poker
 	public class PokerGame
 	{
 		private IPartyList PartyList { get; init; }
-		private IClientState ClientState { get; init; }
+		private IObjectTable ObjectTable { get; init; }
 
 		private CardDeck CardDeck { get; init; } = new CardDeck();
 
@@ -29,7 +29,7 @@ namespace DRGames.Poker
 				var result = "";
 				foreach (var member in PartyList)
 				{
-					if (member.Name.TextValue != ClientState.LocalPlayer?.Name.TextValue)
+					if (member.Name.TextValue != ObjectTable.LocalPlayer?.Name.TextValue)
 					{
 						result += member.Name;
 						result += " ";
@@ -40,10 +40,10 @@ namespace DRGames.Poker
 			}
 		}
 
-		public PokerGame(IPartyList partyList, IClientState clientState)
+		public PokerGame(IPartyList partyList, IObjectTable objectTable)
 		{
 			PartyList = partyList;
-			ClientState = clientState;
+			ObjectTable = objectTable;
 		}
 
 		public void Update()
@@ -51,14 +51,14 @@ namespace DRGames.Poker
 			// Add new players in the party to the game
 			foreach (var member in PartyList)
 			{
-				if (member.Name.TextValue == ClientState.LocalPlayer!.Name.TextValue)
+				if (member.Name.TextValue == ObjectTable.LocalPlayer!.Name.TextValue)
 				{
 					continue;
 				}
 
 				if (!PlayerList.Any(x => x.Name == member.Name.TextValue))
 				{
-					PlayerList.Add(new Player(member.Name.TextValue, member.World.GetWithLanguage(ClientState.ClientLanguage)!.Name));
+					PlayerList.Add(new Player(member.Name.TextValue, member.World.Value.Name.ToString()));
 				}
 			}
 			// Remove players that have left the party

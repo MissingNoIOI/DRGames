@@ -41,6 +41,5 @@ namespace DRGames
 
 			return temp.EndsWith("1") ? $"{value}st" : temp.EndsWith("2") ? $"{value}nd" : temp.EndsWith("3") ? $"{value}rd" : $"{value}th";
 		}
-
 	}
 }

@@ -2,9 +2,10 @@ using Dalamud.Interface.Windowing;
 using Dalamud.Plugin.Services;
 using DRGames.Poker;
 using FFXIVClientStructs.FFXIV.Common.Math;
-using ImGuiNET;
+using Dalamud.Bindings.ImGui;
 using System;
 using System.Linq;
+using Dalamud.Game.Text;
 
 namespace DRGames.Windows
 {
@@ -62,8 +63,12 @@ namespace DRGames.Windows
 						if (ImGui.Button("Deal Hand"))
 						{
 							Game.DealHand(player);
-							ImGui.SetClipboardText($"/tell {player.Name}@{player.World} Your cards are {player.Hand.Item1.FullName} and {player.Hand.Item2.FullName}");
-							ChatGui.Print($"Copied {player.Name}'s hand to the clipboard");
+							ChatGui.Print(new XivChatEntry
+							{
+								Type = XivChatType.TellOutgoing,
+								Name = player.Name,
+								Message = $"Your cards are {player.Hand.Item1.FullName} and {player.Hand.Item2.FullName}"
+							});
 						}
 					}
 				}
@@ -89,11 +94,19 @@ namespace DRGames.Windows
 							var cards = string.Join(" | ", Game.CommunityCards);
 							if (Game.Stage < 2)
 							{
-								ImGui.SetClipboardText($"/party The game is now in the {Helpers.TranslateInt(Game.Stage)} stage and the community cards are {cards}");
+								ChatGui.Print(new XivChatEntry
+								{
+									Type = XivChatType.Party,
+									Message = $"The game is now in the {Helpers.TranslateInt(Game.Stage)} stage and the community cards are {cards}"
+								});
 							}
 							else
 							{
-								ImGui.SetClipboardText($"/party The game is now in the {Helpers.TranslateInt(Game.Stage)} stage, the new card is {Game.CommunityCards.Last()}, so the community cards are {cards}");
+								ChatGui.Print(new XivChatEntry
+								{
+									Type = XivChatType.Party,
+									Message = $"The game is now in the {Helpers.TranslateInt(Game.Stage)} stage, the new card is {Game.CommunityCards.Last()}, so the community cards are {cards}"
+								});
 							}
 							ChatGui.Print($"Copied the community cards to the clipboard");
 						}
