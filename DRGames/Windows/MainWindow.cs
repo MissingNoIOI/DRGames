@@ -9,7 +9,7 @@ namespace DRGames.Windows;
 
 public class MainWindow : Window, IDisposable
 {
-	private readonly Plugin Plugin;
+	private readonly Plugin plugin;
 
 	public MainWindow(Plugin plugin) : base(
 		"DRGames", ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse)
@@ -19,7 +19,7 @@ public class MainWindow : Window, IDisposable
 			MinimumSize = new Vector2(375, 330),
 			MaximumSize = new Vector2(float.MaxValue, float.MaxValue)
 		};
-		Plugin = plugin;
+		this.plugin = plugin;
 	}
 
 	public void Dispose()
@@ -28,18 +28,18 @@ public class MainWindow : Window, IDisposable
 
 	public override void Draw()
 	{
-		ImGui.Text($"The random config bool is {Plugin.Configuration.SomePropertyToBeSavedAndWithADefault}");
+		ImGui.Text($"The random config bool is {plugin.Configuration.SomePropertyToBeSavedAndWithADefault}");
 
 		if (ImGui.Button("Show Settings"))
 		{
-			Plugin.DrawConfigUI();
+			plugin.DrawConfigUI();
 		}
 
 		ImGui.Spacing();
 
 		if (ImGui.Button("Play Poker"))
 		{
-			Plugin.DrawPokerUI();
+			plugin.DrawPokerUI();
 		}
 
 		ImGui.Spacing();

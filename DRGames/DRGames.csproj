@@ -25,4 +25,8 @@
   <ItemGroup>
     <None Include="C:\Users\Gerri\source\repos\drgames\DRGames\.editorconfig" />
   </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Betting\" />
+  </ItemGroup>
 </Project>

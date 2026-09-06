@@ -1,4 +1,5 @@
 using Dalamud.Plugin.Services;
+using DRGames.Games;
 using DRGames.Poker.Deck;
 using System;
 using System.Collections.Generic;
@@ -8,14 +9,15 @@ using static DRGames.Poker.Solver;
 
 namespace DRGames.Poker
 {
-	public class PokerGame
+	public class PokerGame : IGame
 	{
-		private IPartyList PartyList { get; init; }
-		private IObjectTable ObjectTable { get; init; }
+		private readonly IPartyList partyList;
+		private readonly IObjectTable objectTable;
 
-		private CardDeck CardDeck { get; init; } = new CardDeck();
+		private readonly CardDeck cardDeck = new CardDeck();
 
 		public List<Player> PlayerList { get; init; } = new List<Player>();
+		public IReadOnlyList<IPlayer> Players => PlayerList;
 		public List<Card> CommunityCards { get; set; } = new List<Card>();
 		public int Stage { get; set; } = 0;
 
@@ -27,9 +29,9 @@ namespace DRGames.Poker
 			get
 			{
 				var result = "";
-				foreach (var member in PartyList)
+				foreach (var member in partyList)
 				{
-					if (member.Name.TextValue != ObjectTable.LocalPlayer?.Name.TextValue)
+					if (member.Name.TextValue != objectTable.LocalPlayer?.Name.TextValue)
 					{
 						result += member.Name;
 						result += " ";
@@ -42,16 +44,25 @@ namespace DRGames.Poker
 
 		public PokerGame(IPartyList partyList, IObjectTable objectTable)
 		{
-			PartyList = partyList;
-			ObjectTable = objectTable;
+			this.partyList = partyList;
+			this.objectTable = objectTable;
+		}
+
+		public void RecordBet(string playerName, long amount)
+		{
+			var player = PlayerList.FirstOrDefault(x => x.Name == playerName);
+			if (player != null && amount > 0)
+			{
+				player.Bet += amount;
+			}
 		}
 
 		public void Update()
 		{
 			// Add new players in the party to the game
-			foreach (var member in PartyList)
+			foreach (var member in partyList)
 			{
-				if (member.Name.TextValue == ObjectTable.LocalPlayer!.Name.TextValue)
+				if (member.Name.TextValue == objectTable.LocalPlayer!.Name.TextValue)
 				{
 					continue;
 				}
@@ -62,7 +73,7 @@ namespace DRGames.Poker
 				}
 			}
 			// Remove players that have left the party
-			var toRemove = PlayerList.Where(x => !PartyList.Any(y => y.Name.TextValue == x.Name)).ToList();
+			var toRemove = PlayerList.Where(x => !partyList.Any(y => y.Name.TextValue == x.Name)).ToList();
 			foreach (var member in toRemove)
 			{
 				_ = PlayerList.Remove(member);
@@ -75,15 +86,16 @@ namespace DRGames.Poker
 			foreach (var player in PlayerList)
 			{
 				player.Hand = null;
+				player.Bet = 0;
 			}
-			CardDeck.GenerateNewDeck();
+			cardDeck.GenerateNewDeck();
 			CommunityCards.Clear();
 			Stage = 0;
 		}
 
 		public void DealHand(Player player)
 		{
-			player.Hand = Tuple.Create(CardDeck.DrawCard(), CardDeck.DrawCard());
+			player.Hand = Tuple.Create(cardDeck.DrawCard(), cardDeck.DrawCard());
 		}
 
 		public void SolveGame()
@@ -97,17 +109,17 @@ namespace DRGames.Poker
 			switch (Stage)
 			{
 				case 0:
-					CommunityCards.Add(CardDeck.DrawCard());
-					CommunityCards.Add(CardDeck.DrawCard());
-					CommunityCards.Add(CardDeck.DrawCard());
+					CommunityCards.Add(cardDeck.DrawCard());
+					CommunityCards.Add(cardDeck.DrawCard());
+					CommunityCards.Add(cardDeck.DrawCard());
 					Stage++;
 					break;
 				case 1:
-					CommunityCards.Add(CardDeck.DrawCard());
+					CommunityCards.Add(cardDeck.DrawCard());
 					Stage++;
 					break;
 				case 2:
-					CommunityCards.Add(CardDeck.DrawCard());
+					CommunityCards.Add(cardDeck.DrawCard());
 					SolveGame();
 					Stage++;
 					break;

@@ -1,5 +1,6 @@
 using Dalamud.Interface.Windowing;
 using Dalamud.Plugin.Services;
+using DRGames.Games;
 using DRGames.Poker;
 using FFXIVClientStructs.FFXIV.Common.Math;
 using Dalamud.Bindings.ImGui;
@@ -11,113 +12,94 @@ namespace DRGames.Windows
 {
 	public class PokerWindow : Window, IDisposable
 	{
-		private PokerGame Game { get; init; }
-		private IChatGui ChatGui { get; init; }
+		private readonly PokerGame game;
+		private readonly IChatGui chatGui;
+		private readonly CommonGamePanel commonGamePanel;
+
 		public PokerWindow(PokerGame game, IChatGui chatGui) : base("DRGames Poker", ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse, false)
 		{
 			Size = new Vector2(0, 0);
 			SizeCondition = ImGuiCond.Always;
 
-			Game = game;
-			ChatGui = chatGui;
+			this.game = game;
+			this.chatGui = chatGui;
+			commonGamePanel = new CommonGamePanel(game, chatGui);
 		}
 
 		public void Dispose()
 		{
+			commonGamePanel.Dispose();
+		}
+
+		private void DrawPlayerDetails(IPlayer player)
+		{
+			var pokerPlayer = (Player)player;
+			if (pokerPlayer.Hand != null)
+			{
+				ImGui.Text("Current Hand");
+				ImGui.Text(pokerPlayer.Hand.Item1.FullName);
+				ImGui.Text(pokerPlayer.Hand.Item2.FullName);
+			}
+			else if (ImGui.Button("Deal Hand"))
+			{
+				game.DealHand(pokerPlayer);
+				chatGui.Print(new XivChatEntry
+				{
+					Type = XivChatType.TellOutgoing,
+					Name = pokerPlayer.Name,
+					Message = $"Your cards are {pokerPlayer.Hand.Item1.FullName} and {pokerPlayer.Hand.Item2.FullName}"
+				});
+			}
 		}
 
 		public override void Draw()
 		{
-			Game.Update();
-
-			if (Game.PlayerList.Count == 0)
+			if (!commonGamePanel.DrawPlayers(DrawPlayerDetails))
 			{
-				ImGui.Text("Please invite players to the party");
 				return;
 			}
-
-			// Current players
-			ImGui.Text($"Current Players ");
-			ImGui.Spacing();
-			ImGui.Separator();
-			var id = 0;
-			foreach (var player in Game.PlayerList)
-			{
-				ImGui.PushID(id);
-				ImGui.Text("Player: " + player.Name);
-				var tmp = player.IsPlaying;
-				if (ImGui.Checkbox("Is Playing ", ref tmp))
-				{
-					player.IsPlaying = tmp;
-				}
-				if (player.IsPlaying)
-				{
-					if (player.Hand != null)
-					{
-						ImGui.Text("Current Hand");
-						ImGui.Text(player.Hand.Item1.FullName);
-						ImGui.Text(player.Hand.Item2.FullName);
-					}
-					else
-					{
-						if (ImGui.Button("Deal Hand"))
-						{
-							Game.DealHand(player);
-							ChatGui.Print(new XivChatEntry
-							{
-								Type = XivChatType.TellOutgoing,
-								Name = player.Name,
-								Message = $"Your cards are {player.Hand.Item1.FullName} and {player.Hand.Item2.FullName}"
-							});
-						}
-					}
-				}
-				ImGui.Spacing();
-				ImGui.Separator();
-				ImGui.PopID();
-				id++;
-			}
-			if (Game.PlayerList.Any(x => x.IsPlaying))
+			if (game.PlayerList.Any(x => x.IsPlaying))
 			{
 				//Community Cards
 				ImGui.Dummy(new Vector2(0, 20));
 				ImGui.Text("Current Game");
-				ImGui.Text($"{Helpers.TranslateInt(Game.Stage)} stage");
+				ImGui.Text($"{Helpers.TranslateInt(game.Stage)} stage");
 				ImGui.Spacing();
-				if (Game.Stage != 3)
+				if (game.Stage != 3)
 				{
-					if (Game.PlayerList.All(x => x.Hand != null))
+					if (game.PlayerList.All(x => x.Hand != null))
 					{
+
 						if (ImGui.Button("Next Stage"))
 						{
-							Game.NextStage();
-							var cards = string.Join(" | ", Game.CommunityCards);
-							if (Game.Stage < 2)
+							game.NextStage();
+							var cards = string.Join(" | ", game.CommunityCards);
+							if (game.Stage < 2)
 							{
-								ChatGui.Print(new XivChatEntry
+								chatGui.Print(new XivChatEntry
 								{
 									Type = XivChatType.Party,
-									Message = $"The game is now in the {Helpers.TranslateInt(Game.Stage)} stage and the community cards are {cards}"
+									Message = $"The game is now in the {Helpers.TranslateInt(game.Stage)} stage and the community cards are {cards}"
 								});
 							}
 							else
 							{
-								ChatGui.Print(new XivChatEntry
+								chatGui.Print(new XivChatEntry
 								{
 									Type = XivChatType.Party,
-									Message = $"The game is now in the {Helpers.TranslateInt(Game.Stage)} stage, the new card is {Game.CommunityCards.Last()}, so the community cards are {cards}"
+									Message = $"The game is now in the {Helpers.TranslateInt(game.Stage)} stage, the new card is {game.CommunityCards.Last()}, so the community cards are {cards}"
 								});
 							}
-							ChatGui.Print($"Copied the community cards to the clipboard");
+							chatGui.Print($"Copied the community cards to the clipboard");
 						}
 					}
 				}
 
-				if (Game.CommunityCards.Count > 0)
+				if (game.CommunityCards.Count > 0)
 				{
 					ImGui.Spacing();
 					ImGui.Text("Community Cards");
-					foreach (var card in Game.CommunityCards)
+					foreach (var card in game.CommunityCards)
 					{
 						ImGui.Text(card.FullName);
 					}
@@ -128,10 +110,10 @@ namespace DRGames.Windows
 			}
 
 
-			if (Game.Stage == 3)
+			if (game.Stage == 3)
 			{
 				ImGui.Text("Winners: ");
-				foreach (var winner in Game.Winners)
+				foreach (var winner in game.Winners)
 				{
 					ImGui.Text($"{winner.User!.Name} with a {winner.RankName}");
 				}
@@ -144,7 +126,7 @@ namespace DRGames.Windows
 
 			if (ImGui.Button("End Current Game"))
 			{
-				Game.EndGame();
+				game.EndGame();
 			}
 
 		}

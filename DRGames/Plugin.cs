@@ -31,10 +31,10 @@ namespace DRGames
 		public PokerGame PokerGame { get; init; }
 		public WindowSystem WindowSystem = new("DRGames");
 
-		private ConfigWindow ConfigWindow { get; init; }
+		private readonly ConfigWindow configWindow;
 
-		private PokerWindow PokerWindow { get; init; }
-		private MainWindow MainWindow { get; init; }
+		private readonly PokerWindow pokerWindow;
+		private readonly MainWindow mainWindow;
 
 		public Plugin()
 		{
@@ -42,15 +42,15 @@ namespace DRGames
 
 			var pokerGame = new PokerGame(PartyList, ObjectTable);
 
-			ConfigWindow = new ConfigWindow(this);
-			PokerWindow = new PokerWindow(pokerGame, ChatGui);
-			MainWindow = new MainWindow(this);
+			configWindow = new ConfigWindow(this);
+			pokerWindow = new PokerWindow(pokerGame, ChatGui);
+			mainWindow = new MainWindow(this);
 
 			Logger.Log = Log;
 
-			WindowSystem.AddWindow(ConfigWindow);
-			WindowSystem.AddWindow(PokerWindow);
-			WindowSystem.AddWindow(MainWindow);
+			WindowSystem.AddWindow(configWindow);
+			WindowSystem.AddWindow(pokerWindow);
+			WindowSystem.AddWindow(mainWindow);
 
 			_ = CommandManager.AddHandler(CommandName, new CommandInfo(OnCommand)
 			{
@@ -60,16 +60,16 @@ namespace DRGames
 			PluginInterface.UiBuilder.Draw += DrawUI;
 			PluginInterface.UiBuilder.OpenConfigUi += DrawConfigUI;
 
-			PluginInterface.UiBuilder.OpenMainUi += () => MainWindow.IsOpen = true;
+			PluginInterface.UiBuilder.OpenMainUi += () => mainWindow.IsOpen = true;
 		}
 
 		public void Dispose()
 		{
 			WindowSystem.RemoveAllWindows();
 
-			ConfigWindow.Dispose();
-			MainWindow.Dispose();
-			PokerWindow.Dispose();
+			configWindow.Dispose();
+			mainWindow.Dispose();
+			pokerWindow.Dispose();
 
 			_ = CommandManager.RemoveHandler(CommandName);
 		}
@@ -77,7 +77,7 @@ namespace DRGames
 		private void OnCommand(string command, string args)
 		{
 			// in response to the slash command, just display our main ui
-			MainWindow.IsOpen = true;
+			mainWindow.IsOpen = true;
 		}
 
 		private void DrawUI()
@@ -87,12 +87,12 @@ namespace DRGames
 
 		public void DrawConfigUI()
 		{
-			ConfigWindow.IsOpen = true;
+			configWindow.IsOpen = true;
 		}
 
 		public void DrawPokerUI()
 		{
-			PokerWindow.IsOpen = true;
+			pokerWindow.IsOpen = true;
 		}
 	}
 }

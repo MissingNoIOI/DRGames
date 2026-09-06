@@ -9,9 +9,9 @@ namespace DRGames
 	{
 		public static class ThreadSafeRandom
 		{
-			[ThreadStatic] private static Random? Local;
+			[ThreadStatic] private static Random? local;
 
-			public static Random ThisThreadsRandom => Local ??= new Random(unchecked((Environment.TickCount * 31) + Thread.CurrentThread.ManagedThreadId));
+			public static Random ThisThreadsRandom => local ??= new Random(unchecked((Environment.TickCount * 31) + Thread.CurrentThread.ManagedThreadId));
 		}
 
 		public static void Shuffle<T>(this IList<T> list)
